@@ -1,0 +1,2 @@
+# This file ensures the uploads directory is tracked by git
+# Files in this directory will be ignored by git, but the directory structure is preserved

@@ -1,0 +1,116 @@
+[
+  {
+    "orderId": "EJ001234",
+    "email": "john@example.com",
+    "phone": "+1234567890",
+    "status": "delivered",
+    "orderDate": "2024-01-15",
+    "estimatedDelivery": "2024-01-20",
+    "items": [
+      {
+        "name": "Elegant Silver Ring",
+        "quantity": 1,
+        "price": 299
+      }
+    ],
+    "total": 324,
+    "timeline": [
+      {
+        "status": "confirmed",
+        "date": "2024-01-15",
+        "time": "10:30 AM",
+        "description": "Order confirmed and payment received"
+      },
+      {
+        "status": "packed",
+        "date": "2024-01-16",
+        "time": "2:15 PM",
+        "description": "Order packed and ready for shipment"
+      },
+      {
+        "status": "shipped",
+        "date": "2024-01-17",
+        "time": "9:00 AM",
+        "description": "Order shipped via Express Delivery"
+      },
+      {
+        "status": "out-for-delivery",
+        "date": "2024-01-20",
+        "time": "8:30 AM",
+        "description": "Out for delivery - arriving today"
+      },
+      {
+        "status": "delivered",
+        "date": "2024-01-20",
+        "time": "3:45 PM",
+        "description": "Order delivered successfully"
+      }
+    ]
+  },
+  {
+    "orderId": "EJ001235",
+    "email": "sarah@example.com",
+    "phone": "+1234567891",
+    "status": "shipped",
+    "orderDate": "2024-01-18",
+    "estimatedDelivery": "2024-01-23",
+    "items": [
+      {
+        "name": "Diamond Pendant Necklace",
+        "quantity": 1,
+        "price": 899
+      }
+    ],
+    "total": 924,
+    "timeline": [
+      {
+        "status": "confirmed",
+        "date": "2024-01-18",
+        "time": "11:20 AM",
+        "description": "Order confirmed and payment received"
+      },
+      {
+        "status": "packed",
+        "date": "2024-01-19",
+        "time": "3:30 PM",
+        "description": "Order packed and ready for shipment"
+      },
+      {
+        "status": "shipped",
+        "date": "2024-01-20",
+        "time": "10:15 AM",
+        "description": "Order shipped via Express Delivery"
+      }
+    ]
+  },
+  {
+    "orderId": "EJ001236",
+    "email": "mike@example.com",
+    "phone": "+1234567892",
+    "status": "packed",
+    "orderDate": "2024-01-20",
+    "estimatedDelivery": "2024-01-25",
+    "items": [
+      {
+        "name": "Gold Chain Bracelet",
+        "quantity": 1,
+        "price": 679
+      }
+    ],
+    "total": 704,
+    "timeline": [
+      {
+        "status": "confirmed",
+        "date": "2024-01-20",
+        "time": "2:45 PM",
+        "description": "Order confirmed and payment received"
+      },
+      {
+        "status": "packed",
+        "date": "2024-01-21",
+        "time": "11:00 AM",
+        "description": "Order packed and ready for shipment"
+      }
+    ]
+  }
+]

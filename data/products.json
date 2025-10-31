@@ -1,0 +1,122 @@
+[
+  {
+    "id": "1",
+    "name": "Elegant Silver Ring",
+    "price": 299,
+    "image": "/placeholder.svg?height=400&width=400",
+    "description": "A stunning silver ring crafted with precision and elegance. Perfect for everyday wear or special occasions.",
+    "category": "rings",
+    "metalType": "silver",
+    "inStock": true
+  },
+  {
+    "id": "2",
+    "name": "Diamond Pendant Necklace",
+    "price": 899,
+    "image": "/placeholder.svg?height=400&width=400",
+    "description": "Exquisite diamond pendant necklace that adds sparkle to any outfit. Handcrafted with premium materials.",
+    "category": "necklaces",
+    "metalType": "diamond",
+    "inStock": true
+  },
+  {
+    "id": "3",
+    "name": "Pearl Drop Earrings",
+    "price": 459,
+    "image": "/placeholder.svg?height=400&width=400",
+    "description": "Classic pearl drop earrings that embody timeless elegance. Perfect for formal events and special occasions.",
+    "category": "earrings",
+    "metalType": "pearl",
+    "inStock": true
+  },
+  {
+    "id": "4",
+    "name": "Gold Chain Bracelet",
+    "price": 679,
+    "image": "/placeholder.svg?height=400&width=400",
+    "description": "Luxurious gold chain bracelet with intricate detailing. A statement piece for the modern woman.",
+    "category": "bracelets",
+    "metalType": "gold",
+    "inStock": true
+  },
+  {
+    "id": "5",
+    "name": "Vintage Silver Brooch",
+    "price": 199,
+    "image": "/placeholder.svg?height=400&width=400",
+    "description": "Vintage-inspired silver brooch with antique finish. Perfect for adding character to any outfit.",
+    "category": "brooches",
+    "metalType": "silver",
+    "inStock": false
+  },
+  {
+    "id": "6",
+    "name": "Sapphire Engagement Ring",
+    "price": 1299,
+    "image": "/placeholder.svg?height=400&width=400",
+    "description": "Breathtaking sapphire engagement ring with diamond accents. A symbol of eternal love and commitment.",
+    "category": "rings",
+    "metalType": "diamond",
+    "inStock": true
+  },
+  {
+    "id": "7",
+    "name": "Silver Charm Bracelet",
+    "price": 349,
+    "image": "/placeholder.svg?height=400&width=400",
+    "description": "Delicate silver charm bracelet with customizable charms. Tell your story with every charm.",
+    "category": "bracelets",
+    "metalType": "silver",
+    "inStock": true
+  },
+  {
+    "id": "8",
+    "name": "Crystal Stud Earrings",
+    "price": 129,
+    "image": "/placeholder.svg?height=400&width=400",
+    "description": "Sparkling crystal stud earrings that catch the light beautifully. Perfect for daily wear.",
+    "category": "earrings",
+    "metalType": "crystal",
+    "inStock": true
+  },
+  {
+    "id": "9",
+    "name": "Rose Gold Wedding Band",
+    "price": 549,
+    "image": "/placeholder.svg?height=400&width=400",
+    "description": "Beautiful rose gold wedding band with a smooth, polished finish. Symbol of eternal love.",
+    "category": "rings",
+    "metalType": "rose-gold",
+    "inStock": true
+  },
+  {
+    "id": "10",
+    "name": "Emerald Tennis Necklace",
+    "price": 1599,
+    "image": "/placeholder.svg?height=400&width=400",
+    "description": "Stunning emerald tennis necklace with brilliant cut stones. A luxurious statement piece.",
+    "category": "necklaces",
+    "metalType": "emerald",
+    "inStock": true
+  },
+  {
+    "id": "11",
+    "name": "Gold Hoop Earrings",
+    "price": 389,
+    "image": "/placeholder.svg?height=400&width=400",
+    "description": "Classic gold hoop earrings that never go out of style. Perfect for any occasion.",
+    "category": "earrings",
+    "metalType": "gold",
+    "inStock": false
+  },
+  {
+    "id": "12",
+    "name": "Platinum Eternity Band",
+    "price": 899,
+    "image": "/placeholder.svg?height=400&width=400",
+    "description": "Elegant platinum eternity band with continuous diamonds. A symbol of everlasting love.",
+    "category": "rings",
+    "metalType": "platinum",
+    "inStock": true
+  }
+]
