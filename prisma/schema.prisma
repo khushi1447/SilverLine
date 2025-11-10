@@ -7,8 +7,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" // Change to your DB (postgresql, mysql, sqlite, etc.)
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -45,14 +45,14 @@ model Product {
   name              String
   description       String?
   shortDescription  String?
-  price             Decimal  @db.Decimal(10, 2) 
+  price             Float 
   stock             Int      @default(0)
   lowStockThreshold Int      @default(5)
 
   category   Category @relation(fields: [categoryId], references: [id])
   categoryId Int
 
-  weight        Decimal? @db.Decimal(8, 3)
+  weight        Float?
   size          String? // ring size, chain length, etc.
 
   // Relations
@@ -77,11 +77,11 @@ model Order {
   status OrderStatus @default(PENDING)
 
   // Pricing
-  subtotal       Decimal @db.Decimal(10, 2)
-  taxAmount      Decimal @default(0) @db.Decimal(10, 2)
-  shippingCost   Decimal @default(0) @db.Decimal(10, 2)
-  discountAmount Decimal @default(0) @db.Decimal(10, 2)
-  totalAmount    Decimal @db.Decimal(10, 2)
+  subtotal       Float
+  taxAmount      Float @default(0)
+  shippingCost   Float @default(0)
+  discountAmount Float @default(0)
+  totalAmount    Float
 
   // Applied coupon
   coupon     Coupon? @relation(fields: [couponId], references: [id])
@@ -121,8 +121,8 @@ model OrderItem {
   product    Product @relation(fields: [productId], references: [id])
   productId  Int
   quantity   Int
-  price      Decimal @db.Decimal(10, 2) // price at order time
-  totalPrice Decimal @db.Decimal(10, 2) // price * quantity
+  price      Float // price at order time
+  totalPrice Float // price * quantity
 
   // Store product details at time of order
   productName  String
@@ -162,7 +162,7 @@ model Payment {
   orderId         Int
   paymentMethod   PaymentMethod
   gateway         String? // stripe, razorpay, paypal, etc.
-  amount          Decimal       @db.Decimal(10, 2)
+  amount          Float
   currency        String        @default("INR")
   status          PaymentStatus
   transactionId   String?
@@ -198,9 +198,9 @@ model Coupon {
   name          String // internal name
   description   String?
   discountType  DiscountType
-  discountValue Decimal      @db.Decimal(10, 2)
-  minOrderValue Decimal      @default(0) @db.Decimal(10, 2)
-  maxDiscount   Decimal?     @db.Decimal(10, 2) // max discount for percentage coupons
+  discountValue Float
+  minOrderValue Float      @default(0)
+  maxDiscount   Float?     // max discount for percentage coupons
 
   // Usage limits
   usageLimit   Int? // total usage limit
@@ -314,7 +314,7 @@ model Shipping {
   order             Order          @relation(fields: [orderId], references: [id])
   orderId           Int            @unique
   method            ShippingMethod
-  cost              Decimal        @db.Decimal(10, 2)
+  cost              Float
   trackingNumber    String?
   carrier           String? // FedEx, UPS, DHL, etc.
   status            ShippingStatus @default(PENDING)
