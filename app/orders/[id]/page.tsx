@@ -5,9 +5,9 @@ import PaymentStatus from '@/components/PaymentStatus'
 import { CheckCircleIcon, ClockIcon, XCircleIcon } from '@heroicons/react/24/solid'
 
 interface OrderPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 async function getOrder(id: string, userId?: string) {
@@ -51,7 +51,8 @@ const statusConfig = {
 
 export default async function OrderPage({ params }: OrderPageProps) {
   const session = await getServerSession()
-  const order = await getOrder(params.id, session?.user?.id)
+  const { id } = await params
+  const order = await getOrder(id, session?.user?.id)
 
   if (!order) {
     notFound()
@@ -161,9 +162,9 @@ export default async function OrderPage({ params }: OrderPageProps) {
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span>{order.shippingCost > 0 ? formatCurrency(Number(order.shippingCost)) : 'Free'}</span>
+                  <span>{Number(order.shippingCost) > 0 ? formatCurrency(Number(order.shippingCost)) : 'Free'}</span>
                 </div>
-                {order.discountAmount > 0 && (
+                {Number(order.discountAmount) > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount</span>
                     <span>-{formatCurrency(Number(order.discountAmount))}</span>

@@ -23,7 +23,10 @@ export interface RazorpayPaymentVerification {
 }
 
 // Create Razorpay order
-export async function createRazorpayOrder(orderData: RazorpayOrderData) {
+export async function createRazorpayOrder(orderData: RazorpayOrderData): Promise<
+  | { success: true; order: any }
+  | { success: false; error: string }
+> {
   try {
     const order = await razorpay.orders.create({
       amount: orderData.amount,

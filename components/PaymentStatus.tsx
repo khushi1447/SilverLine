@@ -3,7 +3,7 @@
 import { CheckCircleIcon, XCircleIcon, ClockIcon, CreditCardIcon } from '@heroicons/react/24/solid'
 
 interface PaymentStatusProps {
-  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'REFUNDED'
   amount: number
   currency?: string
   transactionId?: string
@@ -19,6 +19,13 @@ const statusConfig = {
     label: 'Payment Pending',
     description: 'Payment is being processed'
   },
+  PROCESSING: {
+    icon: ClockIcon,
+    color: 'text-blue-600 bg-blue-50 border-blue-200',
+    iconColor: 'text-blue-600',
+    label: 'Payment Processing',
+    description: 'Payment is currently processing'
+  },
   COMPLETED: {
     icon: CheckCircleIcon,
     color: 'text-green-600 bg-green-50 border-green-200',
@@ -32,6 +39,13 @@ const statusConfig = {
     iconColor: 'text-red-600',
     label: 'Payment Failed',
     description: 'Payment could not be processed'
+  },
+  CANCELLED: {
+    icon: XCircleIcon,
+    color: 'text-gray-600 bg-gray-50 border-gray-200',
+    iconColor: 'text-gray-600',
+    label: 'Payment Cancelled',
+    description: 'Payment was cancelled'
   },
   REFUNDED: {
     icon: CreditCardIcon,
@@ -61,48 +75,25 @@ export default function PaymentStatus({
     }).format(amount)
   }
 
-  const formatDate = (date: Date | null) => {
-    if (!date) return null
-    return new Intl.DateTimeFormat('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(new Date(date))
-  }
-
   return (
-    <div className={`border rounded-lg p-4 ${config.color} ${className}`}>
-      <div className="flex items-start gap-3">
-        <Icon className={`h-6 w-6 mt-0.5 flex-shrink-0 ${config.iconColor}`} />
-        <div className="flex-1">
-          <h3 className="font-semibold text-sm">{config.label}</h3>
-          <p className="text-sm opacity-80 mt-1">{config.description}</p>
-
-          <div className="mt-3 space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Amount:</span>
-              <span className="text-sm font-semibold">{formatAmount(amount, currency)}</span>
-            </div>
-
-            {transactionId && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Transaction ID:</span>
-                <span className="text-xs font-mono bg-white/50 px-2 py-1 rounded">
-                  {transactionId}
-                </span>
-              </div>
-            )}
-
-            {paidAt && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Paid At:</span>
-                <span className="text-sm">{formatDate(paidAt)}</span>
-              </div>
-            )}
-          </div>
+    <div className={`border rounded-lg p-4 flex items-start gap-3 ${config.color} ${className}`}>
+      <Icon className={`h-6 w-6 ${config.iconColor}`} />
+      <div className="flex-1">
+        <div className="font-semibold">{config.label}</div>
+        <div className="text-sm">{config.description}</div>
+        <div className="mt-2 text-sm">
+          <span className="font-medium">Amount:</span> {formatAmount(amount, currency)}
         </div>
+        {transactionId && (
+          <div className="text-sm">
+            <span className="font-medium">Transaction ID:</span> {transactionId}
+          </div>
+        )}
+        {paidAt && (
+          <div className="text-sm">
+            <span className="font-medium">Paid At:</span> {new Date(paidAt).toLocaleString('en-IN')}
+          </div>
+        )}
       </div>
     </div>
   )

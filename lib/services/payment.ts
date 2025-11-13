@@ -27,9 +27,19 @@ export interface ProcessPaymentData {
 }
 
 // Create payment order
-export async function createPaymentOrder(data: CreatePaymentOrderData) {
+export async function createPaymentOrder(
+  data: CreatePaymentOrderData
+): Promise<
+  | {
+      success: true
+      payment: any
+      order: { id: number; orderNumber: string; total: any }
+      razorpayOrder: any
+      razorpayOrderId: string
+    }
+  | { success: false; error: string }
+> {
   try {
-    // Get order details from database
     const order = await prisma.order.findUnique({
       where: { id: data.orderId },
       include: {
@@ -49,54 +59,52 @@ export async function createPaymentOrder(data: CreatePaymentOrderData) {
       }
     }
 
-    // Generate receipt ID
-    const receipt = generateReceiptId(order.orderNumber)
-
     // Create Razorpay order
+    const receiptId = generateReceiptId(order.orderNumber)
+    const amountPaise = convertToPaise(data.amount)
     const razorpayResult = await createRazorpayOrder({
-      amount: convertToPaise(data.amount),
+      amount: amountPaise,
       currency: data.currency,
-      receipt,
+      receipt: receiptId,
       notes: {
-        orderId: order.id.toString(),
+        orderId: String(order.id),
         orderNumber: order.orderNumber,
         customerEmail: data.customerEmail,
-        customerName: data.customerName,
       }
     })
 
     if (!razorpayResult.success) {
       return {
         success: false,
-        error: razorpayResult.error
+        error: razorpayResult.error || 'Failed to create payment order'
       }
     }
 
-    // Create payment record in database
+    // Persist payment record
     const payment = await prisma.payment.create({
       data: {
         orderId: order.id,
-        paymentMethod: 'CREDIT_CARD', // Razorpay supports multiple methods
-        gateway: 'razorpay',
         amount: data.amount,
         currency: data.currency,
         status: 'PENDING',
+        paymentMethod: 'CREDIT_CARD',
+        gateway: 'razorpay',
         transactionId: razorpayResult.order.id,
-        gatewayResponse: razorpayResult.order
+        gatewayResponse: JSON.parse(JSON.stringify(razorpayResult.order)),
       }
     })
 
     return {
       success: true,
-      razorpayOrder: razorpayResult.order,
       payment,
       order: {
         id: order.id,
         orderNumber: order.orderNumber,
         total: order.totalAmount
-      }
+      },
+      razorpayOrder: razorpayResult.order,
+      razorpayOrderId: razorpayResult.order.id
     }
-
   } catch (error) {
     console.error('Error creating payment order:', error)
     return {
@@ -106,17 +114,24 @@ export async function createPaymentOrder(data: CreatePaymentOrderData) {
   }
 }
 
-// Process payment after successful payment
-export async function processPayment(data: ProcessPaymentData) {
+// Process payment
+export async function processPayment(
+  data: ProcessPaymentData
+): Promise<
+  | {
+      success: true
+      payment: any
+      order: any
+      paymentStatus: 'COMPLETED' | 'FAILED'
+      message: string
+    }
+  | { success: false; error: string }
+> {
   try {
-    // Find the payment record
     const payment = await prisma.payment.findFirst({
       where: {
         orderId: data.orderId,
         transactionId: data.razorpayOrderId
-      },
-      include: {
-        order: true
       }
     })
 
@@ -128,7 +143,7 @@ export async function processPayment(data: ProcessPaymentData) {
     }
 
     let paymentStatus: 'COMPLETED' | 'FAILED' = 'FAILED'
-    let orderStatus: 'CONFIRMED' | 'FAILED' = 'FAILED'
+    let orderStatus: 'CONFIRMED' | 'CANCELLED' = 'CANCELLED'
 
     if (data.paymentMethod === 'razorpay' && data.razorpayPaymentId && data.razorpaySignature) {
       // Verify Razorpay payment
@@ -145,13 +160,17 @@ export async function processPayment(data: ProcessPaymentData) {
     }
 
     // Update payment record
+    const baseGateway = (typeof payment.gatewayResponse === 'object' && payment.gatewayResponse !== null)
+      ? (payment.gatewayResponse as any)
+      : {}
+
     const updatedPayment = await prisma.payment.update({
       where: { id: payment.id },
       data: {
         status: paymentStatus,
         paidAt: paymentStatus === 'COMPLETED' ? new Date() : null,
         gatewayResponse: {
-          ...payment.gatewayResponse,
+          ...baseGateway,
           paymentId: data.razorpayPaymentId,
           signature: data.razorpaySignature,
           verifiedAt: new Date().toISOString()
@@ -210,14 +229,20 @@ export async function processPayment(data: ProcessPaymentData) {
       }
     }
 
+    // Return discriminated union based on paymentStatus
+    if (paymentStatus === 'COMPLETED') {
+      return {
+        success: true,
+        payment: updatedPayment,
+        order: updatedOrder,
+        paymentStatus,
+        message: 'Payment successful! Your order has been confirmed.'
+      }
+    }
+
     return {
-      success: paymentStatus === 'COMPLETED',
-      payment: updatedPayment,
-      order: updatedOrder,
-      paymentStatus,
-      message: paymentStatus === 'COMPLETED'
-        ? 'Payment successful! Your order has been confirmed.'
-        : 'Payment verification failed. Please try again.'
+      success: false,
+      error: 'Payment verification failed. Please try again.'
     }
 
   } catch (error) {
@@ -289,12 +314,16 @@ export async function refundPayment(paymentId: number, amount?: number) {
     // This is a placeholder for actual refund implementation
 
     // Update payment status
+    const baseGateway = (typeof payment.gatewayResponse === 'object' && payment.gatewayResponse !== null)
+      ? (payment.gatewayResponse as any)
+      : {}
+
     await prisma.payment.update({
       where: { id: paymentId },
       data: {
         status: 'REFUNDED',
         gatewayResponse: {
-          ...payment.gatewayResponse,
+          ...baseGateway,
           refundedAt: new Date().toISOString(),
           refundAmount: amount || payment.amount
         }

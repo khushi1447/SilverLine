@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
         if (paymentRecord) {
           await prisma.order.update({
             where: { id: paymentRecord.orderId },
-            data: { status: 'FAILED' }
+            data: { status: 'CANCELLED' }
           })
         }
 
