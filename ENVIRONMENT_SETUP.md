@@ -19,6 +19,11 @@ NEXTAUTH_URL="http://localhost:3000"
 RAZORPAY_KEY_ID="your-razorpay-key"
 RAZORPAY_KEY_SECRET="your-razorpay-secret"
 
+# Optional: Delhivery Shipping Integration
+DELHIVERY_BASE_URL="https://track.delhivery.com"
+DELHIVERY_API_KEY="your-delhivery-api-key"
+DELHIVERY_CLIENT_NAME="ElegantJewelry"
+
 # Optional: Email Service (if using SendGrid, etc.)
 SENDGRID_API_KEY="your-sendgrid-key"
 ```

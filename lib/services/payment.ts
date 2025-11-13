@@ -6,6 +6,7 @@ import {
   generateReceiptId,
   type RazorpayPaymentVerification
 } from '@/lib/razorpay'
+import { createDelhiveryShipment } from '@/lib/services/delhivery'
 
 export interface CreatePaymentOrderData {
   orderId: number
@@ -185,6 +186,27 @@ export async function processPayment(data: ProcessPaymentData) {
             }
           }
         })
+      }
+
+      // Create Delhivery shipment after successful payment
+      try {
+        console.log('Creating Delhivery shipment for order:', data.orderId)
+        const shipmentResult = await createDelhiveryShipment({
+          orderId: data.orderId
+        })
+
+        if (shipmentResult.success) {
+          console.log('Delhivery shipment created successfully:', shipmentResult.trackingNumber)
+          // Additional logging or notification can be added here
+        } else {
+          console.error('Failed to create Delhivery shipment:', shipmentResult.error)
+          // Log the error but don't fail the payment process
+          // The order is still confirmed, shipping can be handled manually
+        }
+      } catch (shipmentError) {
+        console.error('Error creating Delhivery shipment:', shipmentError)
+        // Don't fail the payment if shipment creation fails
+        // This ensures the order is still confirmed and can be handled manually
       }
     }
 
