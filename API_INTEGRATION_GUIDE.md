@@ -628,3 +628,127 @@ When replacing static data with API data:
 10. **Implement Infinite Scroll** for large datasets
 
 This guide provides a comprehensive approach to integrating APIs in your Next.js application while maintaining performance, user experience, and code quality.
+
+## Razorpay Integration
+
+This project includes a production-ready Razorpay integration for order payment creation, checkout, and server-side verification.
+
+### Environment Variables
+- `RAZORPAY_KEY_ID` – your Razorpay public key
+- `RAZORPAY_KEY_SECRET` – your Razorpay secret
+- `RAZORPAY_WEBHOOK_SECRET` – secret used to verify Razorpay webhooks
+
+### Backend APIs and Helpers
+- `lib/razorpay.ts`
+  - `createRazorpayOrder(orderData)` – creates a payment order
+  - `verifyRazorpayPayment(verification)` – verifies the checkout signature
+  - `verifyWebhookSignature(payload, signature, secret)` – verifies webhook signatures
+  - `convertToPaise(amount)` / `convertFromPaise(amount)` – amount helpers
+  - `generateReceiptId(orderNumber?)` – consistent receipt IDs
+  - `getRazorpayConfig()` – values for initializing checkout on the frontend
+
+### Typical Flow
+- Backend creates an order using `createRazorpayOrder({ amount: convertToPaise(total), currency: 'INR', receipt })`.
+- Frontend initializes Razorpay Checkout using `getRazorpayConfig()` and the created `order.id`.
+- After payment, the frontend returns `razorpay_payment_id`, `razorpay_order_id`, and `razorpay_signature` to your backend.
+- Backend verifies with `verifyRazorpayPayment({ razorpay_order_id, razorpay_payment_id, razorpay_signature })`.
+- Optionally, set up a webhook and verify with `verifyWebhookSignature(payload, x-razorpay-signature, RAZORPAY_WEBHOOK_SECRET)` to handle asynchronous events.
+
+### Example Backend Usage
+```typescript
+import { createRazorpayOrder, verifyRazorpayPayment, convertToPaise, generateReceiptId } from '@/lib/razorpay'
+
+// Create order
+const orderRes = await createRazorpayOrder({
+  amount: convertToPaise(grandTotal),
+  currency: 'INR',
+  receipt: generateReceiptId(orderNumber),
+  notes: { orderNumber },
+})
+
+// Verify payment after checkout
+const isValid = verifyRazorpayPayment({
+  razorpay_order_id,
+  razorpay_payment_id,
+  razorpay_signature,
+})
+```
+
+### Notes
+- Always convert to paise for `amount` when creating orders.
+- Use idempotent `receipt` values per order attempt.
+- Handle `authorized` vs `captured` statuses per your business rules.
+
+## Delhivery Integration
+
+This project integrates Delhivery for shipment creation, tracking, and pickup (warehouse) registration. Recent updates fix CMU payload formatting and improve error reporting.
+
+### Environment Variables
+- `DELHIVERY_BASE_URL` – default `https://api.delhivery.com`
+- `DELHIVERY_API_KEY` – your Delhivery API token
+- `DELHIVERY_CLIENT_NAME` – client identifier exactly as in Delhivery panel
+- Pickup warehouse configuration (must match your registered ClientWarehouse):
+  - `DELHIVERY_PICKUP_NAME`
+  - `DELHIVERY_PICKUP_ADDRESS`
+  - `DELHIVERY_PICKUP_CITY`
+  - `DELHIVERY_PICKUP_STATE`
+  - `DELHIVERY_PICKUP_PIN`
+  - `DELHIVERY_PICKUP_COUNTRY`
+  - `DELHIVERY_PICKUP_PHONE` (10-digit)
+  - `DELHIVERY_PICKUP_EMAIL`
+
+### Backend Services
+- `lib/delhivery.ts`
+  - `createShipment(shipmentData)` – creates shipment(s) via CMU
+  - `trackShipment(waybill)` – fetches tracking details
+  - `cancelShipment(waybill)` – cancels a shipment
+  - `createPickup(pickupData)` – registers a pickup location (warehouse)
+  - `getEnvPickupAddress()` – reads pickup warehouse details from environment
+  - Internal: CMU `create.json` call now sends a URL-encoded body including `format=json`, `client=<DELHIVERY_CLIENT_NAME>`, and `data=<JSON>`; `Content-Type` is `application/x-www-form-urlencoded`.
+
+### Admin Endpoint for Warehouse Registration
+- POST `/_/api/admin/delhivery/create-pickup` (actual path: `/api/admin/delhivery/create-pickup`)
+  - Protected by admin session
+  - Reads env-configured pickup details and calls Delhivery `createpickup`
+  - Returns `{ success: true, warehouseId }` on success, otherwise `{ success: false, error }`
+
+Example curl (run after setting env vars):
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -b "<your-admin-session-cookie>" \
+  https://yourdomain.com/api/admin/delhivery/create-pickup
+```
+
+### Shipment Creation Notes
+- The CMU create API expects a URL-encoded POST body with keys:
+  - `format=json`
+  - `client=<your client name>`
+  - `data=<JSON string>` where JSON contains `pickup_location` and `shipments[]`
+- Our service handles the encoding and adds `format`/`client` automatically. Ensure `DELHIVERY_CLIENT_NAME` matches your Delhivery panel exactly.
+- If `data.pickupAddress` is not provided, `getEnvPickupAddress()` is used as fallback.
+
+### Common Errors and Fixes
+- `format key missing in POST`:
+  - Fixed by sending `format=json` in the POST body with `Content-Type: application/x-www-form-urlencoded`.
+  - Ensure you restarted the server after env changes.
+- `ClientWarehouse matching query does not exist.`:
+  - Your provided `pickup_location` must match a registered warehouse.
+  - Set the pickup env variables to exactly match your Delhivery warehouse and register via the admin endpoint if needed.
+- Validation issues:
+  - `phone` must be a valid 10-digit number.
+  - `pin` must be serviceable; use `GET_SERVICES` to check.
+  - `payment_mode` must be one of `Pre-paid` or `COD`.
+  - `weight` is in grams.
+
+### Typical Flow
+- Ensure pickup warehouse exists and matches env values.
+- Create shipment through the checkout flow; backend uses `createShipment`.
+- Track using `trackShipment(waybill)` if needed.
+- Cancel with `cancelShipment(waybill)` when required.
+
+### Logging and Troubleshooting
+- The service logs raw Delhivery responses and includes `rmk` (remarks) in error messages to speed up debugging.
+- If issues persist, capture server logs for:
+  - `Delhivery create shipment failure:` lines
+  - Raw response around create pickup and CMU calls

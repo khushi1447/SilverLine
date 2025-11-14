@@ -4,7 +4,7 @@ import { authOptions } from "../../../../../lib/auth";
 import { getDelhiveryService, getEnvPickupAddress } from "../../../../../lib/delhivery";
 
 // Import the extended session type
-import "@/types/next-auth";
+import { DefaultSession, DefaultUser } from "next-auth";
 
 export async function POST(request: NextRequest) {
   try {
