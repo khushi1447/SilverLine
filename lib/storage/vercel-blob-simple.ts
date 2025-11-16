@@ -8,54 +8,57 @@ export async function uploadToVercelBlob(file: File, folder: string): Promise<Up
     const extension = file.name.split('.').pop() || 'jpg'
     const filename = `${folder}/${timestamp}-${randomString}.${extension}`
 
-    // Create FormData for Vercel Blob API
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('filename', filename)
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN
+    if (!blobToken) {
+      throw new Error("Missing BLOB_READ_WRITE_TOKEN")
+    }
 
-    // Upload to Vercel Blob using fetch
-    const response = await fetch('https://api.vercel.com/v1/blob', {
-      method: 'POST',
+    // Upload directly to Vercel Blob
+    const response = await fetch(`https://blob.vercel-storage.com/upload`, {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${process.env.BLOB_READ_WRITE_TOKEN || "vercel_blob_rw_RYvcQp6FMT1XQpxN_PKi3fRozRw6JZvkRg1d9OJ0aVONPjZ"}`,
+        "Authorization": `Bearer ${blobToken}`,
+        "x-vercel-filename": filename
       },
-      body: formData,
+      body: file
     })
 
     if (!response.ok) {
-      throw new Error(`Vercel Blob upload failed: ${response.statusText}`)
+      const errText = await response.text()
+      throw new Error(`Upload failed: ${response.status} ${errText}`)
     }
 
-    const result = await response.json()
+    const json = await response.json()
 
     return {
-      url: result.url,
+      url: json.url,
       filename,
       size: file.size,
       type: file.type
     }
   } catch (error) {
-    console.error('Vercel Blob upload error:', error)
+    console.error("Vercel Blob upload error:", error)
     throw new Error(`Upload failed: ${error}`)
   }
 }
 
 export async function deleteFromVercelBlob(url: string): Promise<boolean> {
   try {
-    // Extract blob ID from URL
-    const urlParts = url.split('/')
-    const blobId = urlParts[urlParts.length - 1]
+    const blobId = url.split("/").pop()
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN
 
-    const response = await fetch(`https://api.vercel.com/v1/blob/${blobId}`, {
-      method: 'DELETE',
+    if (!blobToken || !blobId) return false
+
+    const response = await fetch(`https://blob.vercel-storage.com/${blobId}`, {
+      method: "DELETE",
       headers: {
-        'Authorization': `Bearer ${process.env.BLOB_READ_WRITE_TOKEN || "vercel_blob_rw_RYvcQp6FMT1XQpxN_PKi3fRozRw6JZvkRg1d9OJ0aVONPjZ"}`,
-      },
+        "Authorization": `Bearer ${blobToken}`
+      }
     })
 
     return response.ok
   } catch (error) {
-    console.error('Vercel Blob delete error:', error)
+    console.error("Vercel Blob delete error:", error)
     return false
   }
 }
