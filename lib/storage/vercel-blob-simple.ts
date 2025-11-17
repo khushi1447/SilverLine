@@ -1,64 +1,41 @@
-import { UploadResult } from '../upload'
+import { put } from "@vercel/blob";
+import { UploadResult } from "../upload";
 
 export async function uploadToVercelBlob(file: File, folder: string): Promise<UploadResult> {
   try {
-    // Generate unique filename
-    const timestamp = Date.now()
-    const randomString = Math.random().toString(36).substring(2, 15)
-    const extension = file.name.split('.').pop() || 'jpg'
-    const filename = `${folder}/${timestamp}-${randomString}.${extension}`
+    const extension = file.name.split(".").pop() || "jpg";
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    const filename = `${folder}/${timestamp}-${random}.${extension}`;
 
-    const blobToken = process.env.BLOB_READ_WRITE_TOKEN
-    if (!blobToken) {
-      throw new Error("Missing BLOB_READ_WRITE_TOKEN")
-    }
-
-    // Upload directly to Vercel Blob
-    const response = await fetch(`https://blob.vercel-storage.com/upload`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${blobToken}`,
-        "x-vercel-filename": filename
-      },
-      body: file
-    })
-
-    if (!response.ok) {
-      const errText = await response.text()
-      throw new Error(`Upload failed: ${response.status} ${errText}`)
-    }
-
-    const json = await response.json()
+    const blob = await put(filename, file, {
+      access: "public",
+      token: process.env.BLOB_READ_WRITE_TOKEN!,
+    });
 
     return {
-      url: json.url,
+      url: blob.url,
       filename,
       size: file.size,
-      type: file.type
-    }
-  } catch (error) {
-    console.error("Vercel Blob upload error:", error)
-    throw new Error(`Upload failed: ${error}`)
+      type: file.type,
+    };
+  } catch (error: any) {
+    console.error("Vercel Blob upload error:", error);
+    throw new Error(`Vercel Blob upload failed: ${error.message}`);
   }
 }
 
 export async function deleteFromVercelBlob(url: string): Promise<boolean> {
   try {
-    const blobId = url.split("/").pop()
-    const blobToken = process.env.BLOB_READ_WRITE_TOKEN
+    const { del } = await import("@vercel/blob");
 
-    if (!blobToken || !blobId) return false
+    await del(url, {
+      token: process.env.BLOB_READ_WRITE_TOKEN!,
+    });
 
-    const response = await fetch(`https://blob.vercel-storage.com/${blobId}`, {
-      method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${blobToken}`
-      }
-    })
-
-    return response.ok
+    return true;
   } catch (error) {
-    console.error("Vercel Blob delete error:", error)
-    return false
+    console.error("Vercel Blob delete error:", error);
+    return false;
   }
 }
